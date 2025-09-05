@@ -4,90 +4,104 @@
 #include <string.h>
 #include <ctype.h>
 #include <stdlib.h>
-int PC=0;
+//---Variables globales----
+int PC=1;
 int Ax=0;
 int Bx=0;
 int Cx=0;
 int Dx=0;
+int ID=0;
+//int PC=1;
 
 /*
     Comprueba que la cadena sea digitos
 */
 int Numeros(char *numero){
-    if(numero[0] == '\0') return 0;
+    if(numero[0] == '\0') return 0;         //si la cadena esta vacia regresa cero ya que no es valido
     int i=0;
-    for ( i = 0; numero[i] != '\0'; i++)
+    for ( i = 0; numero[i] != '\0'; i++)    //si la cadena no esta vacia va a revisar que lo ingresado no sea 1a2
     {
-        if (!isdigit(numero[i]))
+        if (!isdigit(numero[i]))            //si no es un numero lo que lee entonces Error
         {
-            return 0;
+            return 0;                       //si encuentra algun digito(numero) que no cumple regresa cero
         }
         
     }
-    return 1;
+    return 1;                               //si no encontro errores todo esta bien
 
 }
+/* 
+    Comprobar si es correcto el registro de las letras
+*/
 int registroValido(char *letrasM){
    return(strcmp(letrasM,"Ax")==0 || strcmp(letrasM,"Bx")==0 || strcmp(letrasM,"Cx")==0 || strcmp(letrasM,"Dx")==0);
-         
+    //El registro va a ser valido si cumple con alguna de esas      
 }
 
 
-int leer_instruccion(FILE *fp){
-        char linea[256];
-        char instruccion[5];   //va a leer lo primero
-        char letrasM[3];
-        char numeros[10];
+int leer_instruccion(FILE *fp, const char *archivo){
+        char linea[256];                                //Una linea
+        char instruccion[5];                            //MOV ADD ..ese tipo de instruccion
+        char letrasM[3];                                //la letras Ax Bx ...
+        char numeros[10];                               //Los numeros despues de las comas ,
         
-    if(fgets(linea,sizeof(linea),fp)==NULL){ //lee la linea del archivo de la linea 
+    if(fgets(linea,sizeof(linea),fp)==NULL){             //lee la linea del archivo de la linea 
         return 1;
     }
     
-        PC++; //
-    linea[strcspn(linea,"\n")]='\0';
+        PC++;                                           //El contador
+    linea[strcspn(linea,"\n")]='\0';                   //Si la linea es \n una salto de linea eto va a ser nulo
 
     if(linea == NULL){
-        //si la linea no tiene nada no hace nada
-        return 0;
+                                                                     //si la linea no tiene nada no hace nada
+        return 0;                                                    //indicamos que todo esta bien
     }
-    int token;
+
+    int token;                                                        //vamos a dividirlo por tokens
+
+/* Revisando que tenga alguna de la estroctura ---------------------------- */
                     //lee el formato de MOV Ax,5 
-    token = sscanf(linea,"%s %[^,],%s",instruccion,letrasM,numeros);
+    token = sscanf(linea,"%s %[^,],%s",instruccion,letrasM,numeros);     //solo le damos el formato
     //printf("%s %s %s\n",instruccion,letrasM,numeros);
-     
-    if(token < 2){
-        token=sscanf(linea,"%s %s",instruccion, letrasM);
-        numeros[0]='\0';
+
+ /* Si da solo 2 */    
+    if(token == 2){             
+        token=sscanf(linea,"%s %s",instruccion, letrasM);       //Si solo leyo ese tipo de linea como DEC Ax o INC Bx
+        //que es cuando la instruccion no lleva un numero
+        numeros[0]='\0';                                        //como no resive numeros vaciamos la cadena que esta vacia
        
     }
-    if(token<1){
-        printf("Error:Falta registro y/o valor\n");
+    if(token == 1){                                                 //No leyo una estoctura correcta AD o solo tiene ADD sin ningua otra cosa
+     printf("%2d  %2d  %2d  %2d  %2d  %2d    %2s     %2s       Error: Hace falta registro\n",ID,PC,Ax,Bx,Cx,Dx,archivo, instruccion);
         return 1;
 
     }
-    
+
+   
+/*  Una vez revisada la estoctura, revisa que si este mandando correctamente las palabras------------------------------------------------------------------------------*/
     if(strcmp(instruccion,"MOV")==0 || strcmp(instruccion,"ADD")==0 || strcmp(instruccion,"SUB")==0 || strcmp(instruccion,"MULT")==0 || strcmp(instruccion,"DIV")==0){
         
-        if(token < 3){
-        printf("___________________________\n");
-        printf("%s %s ",instruccion,letrasM);
-        
-            printf("Error: Hace falta un valor\n");
+        if(token < 3){                                                     //Si el token detecto 2 entonces 
+        printf("%2d  %2d  %2d  %2d  %2d  %2d    %2s     %2s  %2s     Error: Hace falta un valor\n",ID,PC,Ax,Bx,Cx,Dx,archivo, instruccion,letrasM);
+
             return 0;
 
         }
-        
+/*  Verificamos que si no es Ax, Bx, etc de un error -------------------------------------------------------------------------------------------------------------------*/
         if(!registroValido(letrasM)){
-            printf("Error: registro no valido\n");
+            printf("%2d  %2d  %2d  %2d  %2d  %2d    %2s     %2s  %2s     Error: Registro no valido\n",ID,PC,Ax,Bx,Cx,Dx,archivo, instruccion,letrasM);
+            //va a decir error, si nunca entra significa que todo es correcto
             return 1;
         } 
             
-            
+/*    Si no encontro numeros ---------------------------------------------------------------------------------------------------------------------------------------------*/            
         if(!Numeros(numeros)){
-            printf("Error: No es un numero\n");
+            printf("%2d  %2d  %2d  %2d  %2d  %2d    %2s     %2s  %2s,%s    Error: No es un numero\n",ID,PC,Ax,Bx,Cx,Dx,archivo, instruccion,letrasM,numeros);
+
             return 1;
         }
-        if(strcmp(instruccion,"MOV")==0){
+/*    Se hacen las operacines correspondientes----------------------------------------------------------------------------------------------------------------------------*/
+        if(strcmp(instruccion,"MOV")==0){                               //si cumple con MOV
             int valor=0;
             valor=atoi(numeros); //va a ser de cadena a numeros
             if(strcmp(letrasM,"Ax")==0) Ax=valor;
@@ -123,7 +137,7 @@ int leer_instruccion(FILE *fp){
             int valor=0;
             valor=atoi(numeros); //va a ser de cadena a numeros
             if(valor==0){
-                printf("Error:Divicion entre cero\n");
+                printf("%2d  %2d  %2d  %2d  %2d  %2d    %2s     %2s  %2s,%s    Error: Divicion entre cero\n",ID,PC,Ax,Bx,Cx,Dx,archivo, instruccion,letrasM,numeros);
                 return 0;
             }
             if(strcmp(letrasM,"Ax")==0) Ax/=valor;
@@ -132,32 +146,41 @@ int leer_instruccion(FILE *fp){
             else if(strcmp(letrasM,"Dx")==0) Dx/=valor;
         }
     
-        printf("___________________________\n");
-        printf("%s %s ",instruccion,letrasM);
-        printf("Correcto\n");
+     
+       printf("%2d  %2d  %2d  %2d  %2d  %2d    %2s     %2s  %2s,%s      Correcto\n",ID,PC,Ax,Bx,Cx,Dx,archivo, instruccion,letrasM,numeros);
 
-        printf(" Ax:  %d, Bx: %d, Cx: %d, Dx %d \n",Ax,Bx,Cx,Dx);
-      
-        }
-    else if(strcmp(instruccion,"INC")==0 || strcmp(instruccion,"DEC")==0){
+
+
         
-        if(token < 2){
+        }
+/*  Si no leyo ninguna MOV , etc y leyo algo de esto ------------------------------------------------------------*/
+    else if(strcmp(instruccion,"INC")==0 || strcmp(instruccion,"DEC")==0){
+            token = sscanf(linea, "%s %s %s", instruccion, letrasM, numeros);
 
-        printf("___________________________\n");
-        printf("%s ",instruccion);
-            printf("Error: Hace falta un registro\n");
+        if(token < 2){                                              //Si solo leyo una instruccion como INC nadamas
+
+        //printf("%s ",instruccion);
+            printf("Error: Hace falta un registro\n");              //imprime Error solo leyo
+      
             return 0;
 
         }
+        //if(token )
         
-        if(!registroValido(letrasM)){
-        printf("%s %s",instruccion,letrasM);
-            printf("Error: Registro no valido\n");
+        if(!registroValido(letrasM)){                               //Llamamos a la variable para que valide las letras
+        //  printf("%s %s",instruccion,letrasM);                        //si leyo que no cumple manda un error
+             printf("%2d  %2d  %2d  %2d  %2d  %2d    %2s     %2s  %2s      Error: Registro no valido\n",ID,PC,Ax,Bx,Cx,Dx,archivo, instruccion,letrasM);
             return 1;
         } 
         
-        if(token == 3){
-        
+        if(token == 3){                                             //Si solo cumplio con con tres cosas INC Ax algo_mas eso no es correcto
+       // printf("%s %s \n",instruccion,letrasM);
+         //   printf("Error: No se permiten ese tipo de valores-\n");
+         printf("%2d  %2d  %2d  %2d  %2d  %2d    %2s     %2s  %2s...     Error: Registro no valido\n",ID,PC,Ax,Bx,Cx,Dx,archivo, instruccion,letrasM);
+            return 1;
+        }
+        if(token > 3){                                             //Si solo cumplio con con tres cosas INC Ax algo_mas eso no es correcto
+        printf("%s %s \n",instruccion,letrasM);
             printf("Error: No se permiten ese tipo de valores\n");
             return 1;
         }
@@ -179,17 +202,12 @@ int leer_instruccion(FILE *fp){
         }
 
 
-
-        printf("___________________________\n");
-        printf("%s %s ",instruccion,letrasM);
-        
-        printf("Correcto\n");
-
-        printf(" Ax:  %d, Bx: %d, Cx: %d, Dx %d \n",Ax,Bx,Cx,Dx);
+       printf("%2d  %2d  %2d  %2d  %2d  %2d    %2s     %2s  %2s     Correcto\n",ID,PC,Ax,Bx,Cx,Dx,archivo, instruccion,letrasM);
 
     }
 
 }
+
 //---------------------------
 //---Verifica la extencion---
 //---------------------------
@@ -231,19 +249,24 @@ void ejecutar_archivo(const char *archivo) {
     FILE *fp = fopen(archivo, "r");
     if (fp == NULL) {
         printf("No se pudo abrir el archivo: %s\n", archivo);
-        return;
+        //return;
     }
-
+    
    // printf("Tokens del archivo %s\n", archivo);
 
     char linea[256];
     //'''''''Lee linea x linea'''''''''''''
+
+    printf("___________________________________________________________________________\n");
+    printf(" ID PC  Ax  Bx  Cx  Dx   PROCESO      IR            STATUS     \n");
     while (!feof(fp))
     {
     
-        leer_instruccion(fp);               //lee la linea actualz
+        leer_instruccion(fp,archivo);               //lee la linea actual
         sig_linea++;                       //lee la siguiente linea
-        printf("%d\n",sig_linea);
+        
+        
+        
     }
     
 
