@@ -20,7 +20,7 @@ int main() {
             break;
         } 
         else if (strcmp(comando, "ejecutar") == 0) {
-            printf("Archivo a ejecutar > ");
+            //printf("Archivo a ejecutar > ");
             scanf("%99s", argumento);  // leemos el nombre del archivo
 //-----------Llamamos a la funcion para que haga las operaciones
             ejecutar_archivo(argumento);
