@@ -4,6 +4,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <stdlib.h>
+#include "operaciones.h"
 
 //---Variables globales----
 int PC=1;
@@ -30,8 +31,8 @@ int Numeros(char *numero){
     Comprobar si es correcto el registro de las letras
 */
 int registroValido(char *letrasM){
-   return(strcmp(letrasM,"Ax")==0 || strcmp(letrasM,"Bx")==0 || 
-          strcmp(letrasM,"Cx")==0 || strcmp(letrasM,"Dx")==0);    
+   return(strcasecmp(letrasM,"Ax")==0 || strcasecmp(letrasM,"Bx")==0 || 
+          strcasecmp(letrasM,"Cx")==0 || strcasecmp(letrasM,"Dx")==0);    
 }
 
 /*
@@ -52,6 +53,7 @@ int leer_instruccion(FILE *fp, const char *archivo, int ID) {
     PC++;
     linea[strcspn(linea, "\n")] = '\0';
     if (linea[0] == '\0') return 0;
+    strcpy(IR, linea);
 
     int token;
     token = sscanf(linea, "%s %[^,],%s", instruccion, letrasM, numeros);
@@ -64,16 +66,10 @@ int leer_instruccion(FILE *fp, const char *archivo, int ID) {
         strcpy(status, "ERROR: Falta instrucción");
     }
 
-    // Construir IR (ej: MOV Ax,5 o INC Bx)
-    if (numeros[0] != '\0')
-        sprintf(IR, "%s %s,%s", instruccion, letrasM, numeros);
-    else
-        sprintf(IR, "%s %s", instruccion, letrasM);
-
-    // Procesar instrucciones
-    if (strcmp(instruccion, "MOV") == 0 || strcmp(instruccion, "ADD") == 0 ||
-        strcmp(instruccion, "SUB") == 0 || strcmp(instruccion, "MULT") == 0 ||
-        strcmp(instruccion, "DIV") == 0) {
+    // strcasecmp para comparar sin importar mayusculas y minusculas
+    if (strcasecmp(instruccion, "MOV") == 0 || strcasecmp(instruccion, "ADD") == 0 ||
+        strcasecmp(instruccion, "SUB") == 0 || strcasecmp(instruccion, "MUL") == 0 ||
+        strcasecmp(instruccion, "DIV") == 0) {
 
         if (token < 3) {
             strcpy(status, "ERROR: Falta valor");
@@ -83,38 +79,38 @@ int leer_instruccion(FILE *fp, const char *archivo, int ID) {
             strcpy(status, "ERROR: No es número");
         } else {
             int valor = atoi(numeros);
-            if (strcmp(instruccion, "MOV") == 0) {
-                if (strcmp(letrasM, "Ax") == 0) Ax = valor;
-                else if (strcmp(letrasM, "Bx") == 0) Bx = valor;
-                else if (strcmp(letrasM, "Cx") == 0) Cx = valor;
-                else if (strcmp(letrasM, "Dx") == 0) Dx = valor;
-            } else if (strcmp(instruccion, "ADD") == 0) {
-                if (strcmp(letrasM, "Ax") == 0) Ax += valor;
-                else if (strcmp(letrasM, "Bx") == 0) Bx += valor;
-                else if (strcmp(letrasM, "Cx") == 0) Cx += valor;
-                else if (strcmp(letrasM, "Dx") == 0) Dx += valor;
-            } else if (strcmp(instruccion, "SUB") == 0) {
-                if (strcmp(letrasM, "Ax") == 0) Ax -= valor;
-                else if (strcmp(letrasM, "Bx") == 0) Bx -= valor;
-                else if (strcmp(letrasM, "Cx") == 0) Cx -= valor;
-                else if (strcmp(letrasM, "Dx") == 0) Dx -= valor;
-            } else if (strcmp(instruccion, "MULT") == 0) {
-                if (strcmp(letrasM, "Ax") == 0) Ax *= valor;
-                else if (strcmp(letrasM, "Bx") == 0) Bx *= valor;
-                else if (strcmp(letrasM, "Cx") == 0) Cx *= valor;
-                else if (strcmp(letrasM, "Dx") == 0) Dx *= valor;
-            } else if (strcmp(instruccion, "DIV") == 0) {
+            if (strcasecmp(instruccion, "MOV") == 0) {
+                if (strcasecmp(letrasM, "Ax") == 0) Ax = valor;
+                else if (strcasecmp(letrasM, "Bx") == 0) Bx = valor;
+                else if (strcasecmp(letrasM, "Cx") == 0) Cx = valor;
+                else if (strcasecmp(letrasM, "Dx") == 0) Dx = valor;
+            } else if (strcasecmp(instruccion, "ADD") == 0) {
+                if (strcasecmp(letrasM, "Ax") == 0) Ax = sumar(Ax, valor);
+                else if (strcasecmp(letrasM, "Bx") == 0) Bx = sumar(Bx, valor);
+                else if (strcasecmp(letrasM, "Cx") == 0) Cx = sumar(Cx, valor);
+                else if (strcasecmp(letrasM, "Dx") == 0) Dx = sumar(Dx, valor);
+            } else if (strcasecmp(instruccion, "SUB") == 0) {
+                if (strcasecmp(letrasM, "Ax") == 0) Ax = restar(Ax, valor);
+                else if (strcasecmp(letrasM, "Bx") == 0) Bx = restar(Bx, valor);
+                else if (strcasecmp(letrasM, "Cx") == 0) Cx = restar(Cx, valor);
+                else if (strcasecmp(letrasM, "Dx") == 0) Dx = restar(Dx, valor);
+            } else if (strcasecmp(instruccion, "MUL") == 0) {
+                if (strcasecmp(letrasM, "Ax") == 0) Ax = multiplicar(Ax, valor);
+                else if (strcasecmp(letrasM, "Bx") == 0) Bx = multiplicar(Bx, valor);
+                else if (strcasecmp(letrasM, "Cx") == 0) Cx = multiplicar(Cx, valor);
+                else if (strcasecmp(letrasM, "Dx") == 0) Dx = multiplicar(Dx, valor);
+            } else if (strcasecmp(instruccion, "DIV") == 0) {
                 if (valor == 0) {
                     strcpy(status, "ERROR: División por cero");
                 } else {
-                    if (strcmp(letrasM, "Ax") == 0) Ax /= valor;
-                    else if (strcmp(letrasM, "Bx") == 0) Bx /= valor;
-                    else if (strcmp(letrasM, "Cx") == 0) Cx /= valor;
-                    else if (strcmp(letrasM, "Dx") == 0) Dx /= valor;
+                    if (strcasecmp(letrasM, "Ax") == 0) Ax = dividir(Ax, valor);
+                    else if (strcasecmp(letrasM, "Bx") == 0) Bx = dividir(Bx, valor);
+                    else if (strcasecmp(letrasM, "Cx") == 0) Cx = dividir(Cx, valor);
+                    else if (strcasecmp(letrasM, "Dx") == 0) Dx = dividir(Dx, valor);
                 }
             }
         }
-    } else if (strcmp(instruccion, "INC") == 0 || strcmp(instruccion, "DEC") == 0) {
+    } else if (strcasecmp(instruccion, "INC") == 0 || strcasecmp(instruccion, "DEC") == 0) {
         if (token < 2) {
             strcpy(status, "ERROR: Falta registro");
         } else if (!registroValido(letrasM)) {
@@ -122,24 +118,25 @@ int leer_instruccion(FILE *fp, const char *archivo, int ID) {
         } else if (token == 3) {
             strcpy(status, "ERROR: Sintaxis");
         } else {
-            if (strcmp(instruccion, "INC") == 0) {
-                if (strcmp(letrasM, "Ax") == 0) Ax++;
-                else if (strcmp(letrasM, "Bx") == 0) Bx++;
-                else if (strcmp(letrasM, "Cx") == 0) Cx++;
-                else if (strcmp(letrasM, "Dx") == 0) Dx++;
-            } else if (strcmp(instruccion, "DEC") == 0) {
-                if (strcmp(letrasM, "Ax") == 0) Ax--;
-                else if (strcmp(letrasM, "Bx") == 0) Bx--;
-                else if (strcmp(letrasM, "Cx") == 0) Cx--;
-                else if (strcmp(letrasM, "Dx") == 0) Dx--;
+            if (strcasecmp(instruccion, "INC") == 0) {
+                if (strcasecmp(letrasM, "Ax") == 0) Ax = incrementar(Ax);
+                else if (strcasecmp(letrasM, "Bx") == 0) Bx = incrementar(Bx);
+                else if (strcasecmp(letrasM, "Cx") == 0) Cx = incrementar(Cx);
+                else if (strcasecmp(letrasM, "Dx") == 0) Dx = incrementar(Dx);
+            } else if (strcasecmp(instruccion, "DEC") == 0) {
+                if (strcasecmp(letrasM, "Ax") == 0) Ax = decrementar(Ax);
+                else if (strcasecmp(letrasM, "Bx") == 0) Bx = decrementar(Bx);
+                else if (strcasecmp(letrasM, "Cx") == 0) Cx = decrementar(Cx);
+                else if (strcasecmp(letrasM, "Dx") == 0) Dx = decrementar(Dx);
             }
         }
     }
 
     // Imprimir fila alineada
-    printf("%-3d %-3d %-3d %-3d %-3d %-3d %-10s %-12s %-25s\n",
+    printf("%-3d %-3d %-3d %-3d %-3d %-3d %-10s %-12s %-30s\n",
            ID, PC, Ax, Bx, Cx, Dx, archivo, IR, status);
 
+    
     return 0;
 }
 
@@ -156,7 +153,7 @@ int VerificarE(const char *nombre_archivo) {
         char *ultimo = token_acceso;
         token_acceso = strtok(NULL, ".");
         if (token_acceso == NULL) {
-            if (strcmp(ultimo, "asm") == 0) {
+            if (strcasecmp(ultimo, "asm") == 0) {
                 return 1;   
             } else {
                 printf("Error: extensión no válida\n");
@@ -171,8 +168,6 @@ int VerificarE(const char *nombre_archivo) {
     Ejecutar archivo .asm
 */
 void ejecutar_archivo(const char *archivo) {
-    int ID = 0;
-
     if (!VerificarE(archivo)) return;
 
     FILE *fp = fopen(archivo, "r");
@@ -188,9 +183,11 @@ void ejecutar_archivo(const char *archivo) {
     while (!feof(fp)) {
         leer_instruccion(fp, archivo, ID);
     }
+    ID++;
+    PC = 1;
+    Ax = Bx = Cx = Dx = 0;
 
     fclose(fp);
 }
 
 #endif
-
