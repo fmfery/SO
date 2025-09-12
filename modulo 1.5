@@ -1,0 +1,10 @@
+curses.h #librerias
+unistd.h
+
+WINDOW *window = NULL  #trabajaremos con una ventana
+  window = initscr() #inicio del trabajo de ventana
+  mvprintw(x,y, "texto") #imprimir algo en coordenadas x , y
+  refresh() #refrescar la pantalla
+  endwin() #terminar la ejecucion de la pantalla
+
+  #investigar como compilar con ncurses
