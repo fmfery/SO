@@ -14,9 +14,6 @@ int Cx=0;
 int Dx=0;
 int ID=0;
 
-/*
-    Comprueba que la cadena sean solo dígitos
-*/
 int Numeros(char *numero){
     if(numero[0] == '\0') return 0;   
     for (int i = 0; numero[i] != '\0'; i++){
@@ -25,6 +22,19 @@ int Numeros(char *numero){
         }
     }
     return 1; 
+}
+/*
+    Comprobar si la cadena tiene punto
+*/
+int buscaP(char *letra){
+    for (int i = 0;  letra[i]!= '\0'; i++)
+    {
+        if(letra[i]=='.'){
+            return 1;
+        }
+    }
+    return 0;
+    
 }
 
 /* 
@@ -41,8 +51,8 @@ int registroValido(char *letrasM){
 int leer_instruccion(FILE *fp, const char *archivo, int ID) {
     char linea[256];
     char instruccion[5];
-    char letrasM[3];
-    char numeros[10];
+    char letrasM[10];   
+    char numeros[10];   
     char IR[50];
     char status[40] = "Correcto";
 
@@ -51,29 +61,38 @@ int leer_instruccion(FILE *fp, const char *archivo, int ID) {
     }
 
     PC++;
-    linea[strcspn(linea, "\n")] = '\0';
+    linea[strcspn(linea, "\n")] = '\0'; 
     if (linea[0] == '\0') return 0;
     strcpy(IR, linea);
 
-    int token;
-    token = sscanf(linea, "%s %[^,],%s", instruccion, letrasM, numeros);
-
-    if (token < 2) {
-        token = sscanf(linea, "%s %s", instruccion, letrasM);
-        numeros[0] = '\0';
-    }
-    if (token < 1) {
+    char *token = strtok(linea, " ,");
+    if (token) {
+        strcpy(instruccion, token);
+    } else {
         strcpy(status, "ERROR: Falta instrucción");
     }
 
-    // strcasecmp para comparar sin importar mayusculas y minusculas
+    token = strtok(NULL, " ,");
+    if (token) {
+        strcpy(letrasM, token);
+    } else {
+        letrasM[0] = '\0';
+    }
+
+    token = strtok(NULL, " ,");
+    if (token) {
+        strcpy(numeros, token);
+    } else {
+        numeros[0] = '\0';
+    }
+
     if (strcasecmp(instruccion, "MOV") == 0 || strcasecmp(instruccion, "ADD") == 0 ||
         strcasecmp(instruccion, "SUB") == 0 || strcasecmp(instruccion, "MUL") == 0 ||
         strcasecmp(instruccion, "DIV") == 0) {
 
-        if (token < 3) {
-            strcpy(status, "ERROR: Falta valor");
-        } else if (!registroValido(letrasM)) {
+        if (letrasM[0] == '\0' || numeros[0] == '\0') {
+            strcpy(status, "ERROR: Faltan operandos");
+        } else if (strlen(letrasM) != 2 || !registroValido(letrasM)) {
             strcpy(status, "ERROR: Registro inválido");
         } else if (!Numeros(numeros)) {
             strcpy(status, "ERROR: No es número");
@@ -110,12 +129,13 @@ int leer_instruccion(FILE *fp, const char *archivo, int ID) {
                 }
             }
         }
-    } else if (strcasecmp(instruccion, "INC") == 0 || strcasecmp(instruccion, "DEC") == 0) {
-        if (token < 2) {
+    }
+    else if (strcasecmp(instruccion, "INC") == 0 || strcasecmp(instruccion, "DEC") == 0) {
+        if (letrasM[0] == '\0') {
             strcpy(status, "ERROR: Falta registro");
-        } else if (!registroValido(letrasM)) {
+        } else if (strlen(letrasM) != 2 || !registroValido(letrasM)) {
             strcpy(status, "ERROR: Registro inválido");
-        } else if (token == 3) {
+        } else if (numeros[0] != '\0') {
             strcpy(status, "ERROR: Sintaxis");
         } else {
             if (strcasecmp(instruccion, "INC") == 0) {
@@ -131,18 +151,17 @@ int leer_instruccion(FILE *fp, const char *archivo, int ID) {
             }
         }
     }
+    else {
+        strcpy(status, "ERROR: Instrucción desconocida");
+    }
 
-    // Imprimir fila alineada
-    printf("%-3d %-3d %-3d %-3d %-3d %-3d %-10s %-12s %-30s\n",
+    printf("%-3d %-3d %-3d %-3d %-3d %-3d %-10s %-12s %-50s\n",
            ID, PC, Ax, Bx, Cx, Dx, archivo, IR, status);
 
-    
     return 0;
 }
 
-/*
-    Verifica extensión .asm
-*/
+
 int VerificarE(const char *nombre_archivo) {
     char copia[255];
     char *token_acceso;
