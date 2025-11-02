@@ -1,0 +1,12 @@
+MOV AX,2w3
+MOV Ax 3
+ADD Bx 2,
+ADD Ax,3,4
+ADD Bx,5
+SUB Cx.5
+MUL, Dx,2
+DIV Ax,0
+END
+INC Bx
+DEC Dx
+DIV AX, 1, 1
